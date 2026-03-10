@@ -1,0 +1,51 @@
+# venv
+.venv/
+backend/.venv/
+
+# python cache
+__pycache__/
+*.pyc
+
+# local database
+*.db
+
+# secrets
+.env
+backend/.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# FastAPI / backend
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+
+# Database
+*.sqlite3
+*.db
+
+# Node / frontend
+node_modules/
+dist/
+build/
+.next/
