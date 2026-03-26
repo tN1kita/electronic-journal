@@ -200,7 +200,32 @@ def del_entry(
     clear_entry(db, j, teacher_id=user.id, lesson_id=int(lesson_id), student_id=int(student_id))
     return {"status": "ok"}
 
+@router.get("/{journal_id}/entries")
+def get_entries(
+    journal_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    j = _get_journal_or_404(db, journal_id)
+    if user.role == "teacher" and j.teacher_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
 
+    entries = (
+        db.query(Entry)
+        .join(Lesson, Lesson.id == Entry.lesson_id)
+        .filter(Lesson.journal_id == journal_id)
+        .all()
+    )
+    return [
+        {
+            "id": e.id,
+            "lesson_id": e.lesson_id,
+            "student_id": e.student_id,
+            "grade": e.grade_int,
+            "attendance": e.attendance,
+        }
+        for e in entries
+    ]
 # --------- IMPORT (preview -> confirm) ----------
 
 @router.post("/{journal_id}/import/preview", response_model=ImportPreviewResponse, dependencies=[Depends(require_teacher)])
