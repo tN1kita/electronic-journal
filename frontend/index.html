@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EJour — Журнал преподавателя</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Редирект на логин если нет токена (быстрая проверка до загрузки) -->
+<script>
+if (!localStorage.getItem("access_token")) {
+    window.location.href = "login.html";
+}
+</script>
+
+<!-- ФОН -->
+<div class="background"></div>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="menu">
+
+    <button type="button" class="btn account active" data-page="account">
+      <div class="indicator"></div>
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <span class="text">Аккаунт</span>
+    </button>
+
+    <div class="divider"></div>
+
+    <button type="button" class="btn" data-page="attendance">
+      <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+      <span class="text">Посещаемость</span>
+    </button>
+
+    <button type="button" class="btn" data-page="grades">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h7"/></svg>
+      <span class="text">Оценки</span>
+    </button>
+
+    <button type="button" class="btn" data-page="create">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+      <span class="text">Создать</span>
+    </button>
+
+    <div class="divider"></div>
+
+    <!-- Экспорт XLSX -->
+    <button type="button" class="btn" id="exportXlsxBtn">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><rect x="4" y="18" width="16" height="3"/></svg>
+      <span class="text">XLSX</span>
+    </button>
+
+    <!-- Экспорт PDF -->
+    <button type="button" class="btn" id="exportPdfBtn">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><rect x="4" y="18" width="16" height="3"/></svg>
+      <span class="text">PDF</span>
+    </button>
+
+    <!-- Импорт -->
+    <button type="button" class="btn" id="importBtn">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 21V9"/><path d="M7 14l5-5 5 5"/><rect x="4" y="3" width="16" height="3"/></svg>
+      <span class="text">Импорт</span>
+    </button>
+
+  </div>
+</div>
+
+<!-- КОНТЕНТ -->
+<div class="main">
+  <div class="content">
+
+    <div class="page active" id="account">
+      <h1>Аккаунт</h1>
+    </div>
+
+    <div class="page" id="attendance">
+      <h1>Посещаемость</h1>
+      <div class="page-controls">
+        <button type="button" class="addLessonBtn" data-table="attendanceTable">+ Добавить занятие</button>
+        <button type="button" class="save-journal-btn" id="saveAttendanceBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Сохранить
+        </button>
+      </div>
+      <div class="table-wrapper">
+        <div class="table-container">
+          <table class="journal" id="attendanceTable">
+            <thead><tr><th>ФИО</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="grades">
+      <h1>Оценки</h1>
+      <div class="page-controls">
+        <button type="button" class="addLessonBtn" data-table="gradesTable">+ Добавить занятие</button>
+        <button type="button" class="save-journal-btn" id="saveGradesBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Сохранить
+        </button>
+      </div>
+      <div class="table-wrapper">
+        <div class="table-container">
+          <table class="journal" id="gradesTable">
+            <thead><tr><th>ФИО</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="create">
+      <h1>Создать журнал</h1>
+      <div class="create-controls">
+        <button type="button" id="addStudentRowBtn" class="controls-btn" style="display:none;">+ Добавить студента</button>
+        <button type="button" id="saveTableBtn" class="controls-btn" style="display:none;">Сохранить</button>
+      </div>
+      <div class="table-wrapper">
+        <div class="table-container">
+          <table id="createTable" class="journal" style="display:none;">
+            <thead>
+              <tr>
+                <th>№</th>
+                <th>Фамилия</th>
+                <th>Имя</th>
+                <th>Отчество</th>
+                <th>Email</th>
+                <th style="width:48px;"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- МОДАЛКА СОЗДАНИЯ ЖУРНАЛА -->
+      <div id="createModal" class="modal">
+        <div class="modal-content">
+          <h3>Новый журнал</h3>
+
+          <div class="modal-field">
+            <label>Тип журнала</label>
+            <div class="journal-type-group">
+              <button class="journal-type-btn" data-type="lecture">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                Лекция
+              </button>
+              <button class="journal-type-btn" data-type="practice">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                Практика
+              </button>
+            </div>
+          </div>
+
+          <!-- Схема оценивания (только для практики) -->
+          <div class="modal-field" id="gradingSchemeGroup" style="display:none;">
+            <label>Схема оценивания</label>
+            <div class="journal-type-group">
+              <button type="button" class="grading-btn" data-scheme="1_5">1–5</button>
+              <button type="button" class="grading-btn" data-scheme="0_100">0–100</button>
+            </div>
+          </div>
+
+          <div class="modal-field">
+            <label>Название группы</label>
+            <input type="text" id="groupNameInput" placeholder="Например: ИС-21">
+          </div>
+
+          <div class="modal-field">
+            <label>Название предмета</label>
+            <input type="text" id="subjectNameInput" placeholder="Например: Математика">
+          </div>
+
+          <div class="modal-field">
+            <label>Семестр</label>
+            <input type="text" id="semesterInput" placeholder="Например: 1 семестр 2025/26">
+          </div>
+
+          <div class="modal-field">
+            <label>Кафедра (необязательно)</label>
+            <input type="text" id="departmentInput" placeholder="Например: Кафедра информатики">
+          </div>
+
+          <div class="modal-field">
+            <label>Количество занятий</label>
+            <input type="number" id="lessonsCountInput" min="1" value="16">
+          </div>
+
+          <div class="modal-field">
+            <label>Количество студентов</label>
+            <input type="number" id="studentCountInput" min="1" value="5">
+          </div>
+
+          <button type="button" id="confirmCreateBtn">Создать журнал</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- МОДАЛКА ИМПОРТА -->
+<div id="importModal" class="modal">
+  <div class="modal-content" style="max-width:640px;">
+    <h3>Импорт студентов из Excel</h3>
+
+    <div class="modal-field">
+      <label>Файл Excel (.xlsx, .xls)</label>
+      <input type="file" id="importFileInput" accept=".xls,.xlsx" style="color:var(--text,#fff)">
+    </div>
+
+    <p style="font-size:13px;color:var(--text-muted,rgba(255,255,255,.5));margin:8px 0 4px;">
+      Укажите номера столбцов (с 1):
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div class="modal-field">
+        <label>№</label>
+        <input type="number" id="mapNumber" value="1" min="1">
+      </div>
+      <div class="modal-field">
+        <label>Фамилия</label>
+        <input type="number" id="mapSurname" value="2" min="1">
+      </div>
+      <div class="modal-field">
+        <label>Имя</label>
+        <input type="number" id="mapName" value="3" min="1">
+      </div>
+      <div class="modal-field">
+        <label>Отчество</label>
+        <input type="number" id="mapPatronymic" value="4" min="1">
+      </div>
+      <div class="modal-field">
+        <label>Email</label>
+        <input type="number" id="mapEmail" value="5" min="1">
+      </div>
+      <div class="modal-field">
+        <label>Телефон</label>
+        <input type="number" id="mapPhone" value="6" min="1">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+      <button type="button" class="controls-btn" id="importPreviewBtn">Предпросмотр</button>
+      <button type="button" class="controls-btn" id="importConfirmBtn" style="display:none;">Подтвердить импорт</button>
+      <button type="button" class="controls-btn" id="importCancelBtn" style="background:transparent;border:1px solid rgba(255,255,255,.15);">Отмена</button>
+    </div>
+
+    <div id="importPreviewContainer"></div>
+  </div>
+</div>
+
+<!-- СКРИПТЫ: порядок важен -->
+ <script src="js/debug.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/Api.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/journalBuilder.js"></script>
+<script src="js/account.js"></script>
+<script src="js/export.js"></script>
+<script src="js/attendance.js"></script>
+<script src="js/grades.js"></script>
+<script src="js/students.js"></script>
+<script src="js/lessons.js"></script>
+<script src="js/status.js"></script>
+<script src="js/createTable.js"></script>
+
+</body>
+</html>
