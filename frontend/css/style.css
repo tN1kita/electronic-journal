@@ -8,11 +8,6 @@
     --sidebar-open: 200px;
 }
 
-/* ─── БАЗОВЫЙ LAYOUT ───────────────────────────────────────────────────────
-   Цепочка: body → .main → .content → .page → .table-container
-   Каждый элемент должен иметь ограниченную высоту и передавать её вниз,
-   иначе sticky не работает (браузер не знает, относительно чего клеить).
-──────────────────────────────────────────────────────────────────────────── */
 
 body {
     margin: 0;
@@ -1224,3 +1219,8 @@ select.journal-filter-input {
         min-width: calc(50% - 5px);
     }
 }
+/* Схема оценивания 0–100 */
+td.grade-0_100-bad  { background: #ffd6d6 !important; color: #b30000; font-weight: 600; }
+td.grade-0_100-low  { background: #ffffcc !important; color: #8f8f00; font-weight: 600; }
+td.grade-0_100-mid  { background: #d4f8d4 !important; color: #176117; font-weight: 600; }
+td.grade-0_100-good { background: #a3e49e !important; color: #0f4d07; font-weight: 600; }
