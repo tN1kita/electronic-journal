@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EJour — Вход</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+
+    .login-box {
+        background: var(--card-bg, #1e1e2e);
+        border: 1px solid var(--border, rgba(255,255,255,0.08));
+        border-radius: 16px;
+        padding: 40px 36px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .login-logo {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--accent, #7c6af7);
+        letter-spacing: -1px;
+    }
+
+    .login-subtitle {
+        font-size: 14px;
+        color: var(--text-muted, rgba(255,255,255,0.45));
+        margin-bottom: 32px;
+    }
+
+    .login-field {
+        margin-bottom: 18px;
+    }
+
+    .login-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary, rgba(255,255,255,0.65));
+        margin-bottom: 6px;
+    }
+
+    .login-field input {
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border, rgba(255,255,255,0.12));
+        background: var(--input-bg, rgba(255,255,255,0.05));
+        color: var(--text, #fff);
+        font-size: 14px;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+
+    .login-field input:focus {
+        border-color: var(--accent, #7c6af7);
+    }
+
+    .login-error {
+        font-size: 13px;
+        color: #fc8181;
+        margin-bottom: 14px;
+        min-height: 18px;
+    }
+
+    .login-btn {
+        width: 100%;
+        padding: 11px;
+        border-radius: 8px;
+        background: var(--accent, #7c6af7);
+        color: #fff;
+        font-size: 15px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .login-btn:hover { opacity: 0.9; }
+    .login-btn:active { transform: scale(0.98); }
+    .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .login-register {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--text-muted, rgba(255,255,255,0.45));
+    }
+
+    .login-register a {
+        color: var(--accent, #7c6af7);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .login-register a:hover { text-decoration: underline; }
+
+    /* Форма регистрации (скрыта по умолчанию) */
+    #registerForm { display: none; }
+</style>
+</head>
+<body>
+<div class="background"></div>
+
+<div class="login-box">
+    <div class="login-logo">EJour</div>
+    <div class="login-subtitle">Электронный журнал преподавателя</div>
+
+    <!-- Форма входа -->
+    <div id="loginForm">
+        <div class="login-field">
+            <label>Email</label>
+            <input type="email" id="loginEmail" placeholder="your@university.ru" autocomplete="email">
+        </div>
+        <div class="login-field">
+            <label>Пароль</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <div class="login-error" id="loginError"></div>
+        <button type="button" class="login-btn" id="loginBtn">Войти</button>
+        <div class="login-register">
+            Нет аккаунта? <a href="#" id="showRegister">Зарегистрироваться</a>
+        </div>
+    </div>
+
+    <!-- Форма регистрации -->
+    <div id="registerForm">
+        <div class="login-field">
+            <label>Имя</label>
+            <input type="text" id="regName" placeholder="Иван">
+        </div>
+        <div class="login-field">
+            <label>Фамилия</label>
+            <input type="text" id="regSurname" placeholder="Петров">
+        </div>
+        <div class="login-field">
+            <label>Email</label>
+            <input type="email" id="regEmail" placeholder="your@university.ru">
+        </div>
+        <div class="login-field">
+            <label>Пароль</label>
+            <input type="password" id="regPassword" placeholder="Минимум 6 символов">
+        </div>
+        <div class="login-error" id="registerError"></div>
+        <button type="button" class="login-btn" id="registerBtn">Создать аккаунт</button>
+        <div class="login-register">
+            Уже есть аккаунт? <a href="#" id="showLogin">Войти</a>
+        </div>
+    </div>
+</div>
+
+<script src="js/toast.js"></script>
+<script src="js/Api.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Если уже авторизован — переходим в приложение
+    if (API.getToken()) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Переключение форм
+    document.getElementById("showRegister").addEventListener("click", (e) => {
+        e.preventDefault();
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("registerForm").style.display = "block";
+    });
+
+    document.getElementById("showLogin").addEventListener("click", (e) => {
+        e.preventDefault();
+        document.getElementById("registerForm").style.display = "none";
+        document.getElementById("loginForm").style.display = "block";
+    });
+
+    // Вход
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+        const errEl = document.getElementById("loginError");
+        errEl.textContent = "";
+
+        if (!email || !password) {
+            errEl.textContent = "Введите email и пароль";
+            return;
+        }
+
+        const btn = document.getElementById("loginBtn");
+        btn.disabled = true;
+        btn.textContent = "Входим...";
+
+        try {
+            await API.login(email, password);
+            window.location.href = "index.html";
+        } catch (err) {
+            errEl.textContent = err.message;
+            btn.disabled = false;
+            btn.textContent = "Войти";
+        }
+    });
+
+    // Enter в полях
+    ["loginEmail", "loginPassword"].forEach(id => {
+        document.getElementById(id).addEventListener("keydown", (e) => {
+            if (e.key === "Enter") document.getElementById("loginBtn").click();
+        });
+    });
+
+    // Регистрация
+    document.getElementById("registerBtn").addEventListener("click", async () => {
+        const name = document.getElementById("regName").value.trim();
+        const surname = document.getElementById("regSurname").value.trim();
+        const email = document.getElementById("regEmail").value.trim();
+        const password = document.getElementById("regPassword").value;
+        const errEl = document.getElementById("registerError");
+        errEl.textContent = "";
+
+        if (!name || !surname || !email || !password) {
+            errEl.textContent = "Заполните все поля";
+            return;
+        }
+
+        const btn = document.getElementById("registerBtn");
+        btn.disabled = true;
+        btn.textContent = "Регистрация...";
+
+        try {
+            await API.register({ name, surname, email, password });
+            // После регистрации — входим
+            await API.login(email, password);
+            window.location.href = "index.html";
+        } catch (err) {
+            errEl.textContent = err.message;
+            btn.disabled = false;
+            btn.textContent = "Создать аккаунт";
+        }
+    });
+});
+</script>
+</body>
+</html>
